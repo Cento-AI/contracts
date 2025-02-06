@@ -32,7 +32,7 @@ contract HelperConfig is Script {
             weth: 0x4200000000000000000000000000000000000006,
             usdc: 0x036CbD53842c5426634e7929541eC2318f3dCF7e,
             aaveUsdc: 0xfE45Bf4dEF7223Ab1Bf83cA17a4462Ef1647F7FF,
-            compoundUsdc: 0xe85D00f657F78c799ec4E9CAFd951ce5891bAde8,
+            compoundUsdc: 0x571621Ce60Cebb0c1D442B5afb38B1663C6Bf017,
             uniswapFactory: 0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24,
             uniswapRouter: 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4,
             uniswapQouter: 0xC5290058841028F1614F3A6F0F5816cAd0df5E27,
