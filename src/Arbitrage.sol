@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.18;
+pragma solidity 0.8.22;
 
 // Import necessary interfaces for Balancer Vault, Flash Loans, and Uniswap V3
 import "@balancer/balancer-v2-monorepo/pkg/interfaces/contracts/vault/IVault.sol";
@@ -17,8 +17,7 @@ import {IQuoterV2} from "@uniswap/v3-periphery/contracts/interfaces/IQuoterV2.so
  */
 contract Arbitrage is IFlashLoanRecipient {
     /// @notice Balancer V2 Vault address (Ethereum mainnet)
-    IVault private constant vault =
-        IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
+    IVault private constant vault = IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
 
     /// @notice Owner address to receive arbitrage profits
     address public owner;
@@ -44,12 +43,7 @@ contract Arbitrage is IFlashLoanRecipient {
      * @param amountIn Amount of tokenIn swapped
      * @param minAmountOut Minimum expected amount of tokenOut (slippage protection)
      */
-    event TokensSwapped(
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn,
-        uint256 minAmountOut
-    );
+    event TokensSwapped(address tokenIn, address tokenOut, uint256 amountIn, uint256 minAmountOut);
 
     /// @dev Sets the contract deployer as the owner
     constructor() {
@@ -73,14 +67,8 @@ contract Arbitrage is IFlashLoanRecipient {
         uint256 _flashAmount
     ) external {
         // Encode trade parameters for flash loan callback
-        bytes memory data = abi.encode(
-            Trade({
-                routerPath: _routerPath,
-                quoterPath: _quoterPath,
-                tokenPath: _tokenPath,
-                fee: _fee
-            })
-        );
+        bytes memory data =
+            abi.encode(Trade({routerPath: _routerPath, quoterPath: _quoterPath, tokenPath: _tokenPath, fee: _fee}));
 
         // Configure flash loan parameters
         IERC20[] memory tokens = new IERC20[](1);
@@ -107,10 +95,7 @@ contract Arbitrage is IFlashLoanRecipient {
         uint256[] memory feeAmounts,
         bytes memory userData
     ) external override {
-        require(
-            msg.sender == address(vault),
-            "Unauthorized: Only Balancer Vault"
-        );
+        require(msg.sender == address(vault), "Unauthorized: Only Balancer Vault");
 
         // Decode trade parameters from userData
         Trade memory trade = abi.decode(userData, (Trade));
@@ -168,17 +153,16 @@ contract Arbitrage is IFlashLoanRecipient {
         IERC20(_tokenIn).approve(_router, _amountIn);
 
         // Configure single-hop swap parameters
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: _tokenIn,
-                tokenOut: _tokenOut,
-                fee: _fee,
-                recipient: address(this), // Send output tokens to this contract
-                deadline: block.timestamp, // Expire after current block
-                amountIn: _amountIn,
-                amountOutMinimum: _amountOut, // Minimum output for successful swap
-                sqrtPriceLimitX96: 0 // No price limit (accept any slippage)
-            });
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: _tokenIn,
+            tokenOut: _tokenOut,
+            fee: _fee,
+            recipient: address(this), // Send output tokens to this contract
+            deadline: block.timestamp, // Expire after current block
+            amountIn: _amountIn,
+            amountOutMinimum: _amountOut, // Minimum output for successful swap
+            sqrtPriceLimitX96: 0 // No price limit (accept any slippage)
+        });
 
         // Execute swap on specified router
         ISwapRouter(_router).exactInputSingle(params);

@@ -22,6 +22,7 @@ contract HelperConfig is Script {
         address uniswapRouter; //Uniswap V3
         address uniswapQouter; // Uniswap V3
         address aavePool; // Aave V3
+        address vault;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -36,7 +37,8 @@ contract HelperConfig is Script {
             uniswapFactory: 0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24,
             uniswapRouter: 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4,
             uniswapQouter: 0xC5290058841028F1614F3A6F0F5816cAd0df5E27,
-            aavePool: 0xbE781D7Bdf469f3d94a62Cdcc407aCe106AEcA74
+            aavePool: 0xbE781D7Bdf469f3d94a62Cdcc407aCe106AEcA74,
+            vault: address(123)
         });
         return BaseSepoliaConfig;
     }
@@ -50,7 +52,8 @@ contract HelperConfig is Script {
             uniswapFactory: address(0),
             uniswapRouter: address(0),
             uniswapQouter: address(0),
-            aavePool: 0x8B9b2AF4afB389b4a70A474dfD4AdCD4a302bb40
+            aavePool: 0x8B9b2AF4afB389b4a70A474dfD4AdCD4a302bb40,
+            vault: address(123)
         });
         return AvaxFujiConfig;
     }
@@ -64,7 +67,8 @@ contract HelperConfig is Script {
             uniswapFactory: address(0),
             uniswapRouter: address(0),
             uniswapQouter: address(0),
-            aavePool: 0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951
+            aavePool: 0x6Ae43d3271ff6888e7Fc43Fd7321a503ff738951,
+            vault: address(123)
         });
         return ETHSepoliaConfig;
     }
@@ -82,7 +86,8 @@ contract HelperConfig is Script {
             uniswapFactory: address(2),
             uniswapRouter: address(3),
             uniswapQouter: address(6),
-            aavePool: address(7)
+            aavePool: address(7),
+            vault: address(123)
         });
         return AnvilConfig;
     }
