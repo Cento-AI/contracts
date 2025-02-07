@@ -36,30 +36,21 @@ contract LiquidityManager {
 
     /// @notice Uniswap V3 events
     event TokensSwapped(
-        address indexed protocol,
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn,
-        uint256 amountOut
+        address indexed protocol, address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOut
     );
 
     /// @notice For two token(uniswap)
     event LiquidityAdded(
-        address indexed pool,
-        address token0,
-        address token1,
-        uint128 liquidity,
-        uint256 amount0,
-        uint256 amount1
+        address indexed pool, address token0, address token1, uint128 liquidity, uint256 amount0, uint256 amount1
+    );
+
+    /// @notice For two token(uniswap)
+    event LiquidityRemoved(
+        address indexed pool, address token0, address token1, uint128 liquidity, uint256 amount0, uint256 amount1
     );
 
     /// @notice For single token(aave, compound)
-    event LiquiditySupplied(
-        string protocol,
-        address asset,
-        uint256 amount,
-        address user
-    );
+    event LiquiditySupplied(string protocol, address asset, uint256 amount, address user);
 
     /**
      * @param _aavePool Aave V3 pool address.
@@ -90,15 +81,8 @@ contract LiquidityManager {
      * @param _amount Amount of asset to supply.
      */
     function supplyLiquidityOnAave(address _asset, uint256 _amount) external {
-        require(
-            IERC20(_asset).allowance(msg.sender, address(this)) >= _amount,
-            "Insufficient allowance"
-        );
-        bool approvedUser = IERC20(_asset).transferFrom(
-            msg.sender,
-            address(this),
-            _amount
-        );
+        require(IERC20(_asset).allowance(msg.sender, address(this)) >= _amount, "Insufficient allowance");
+        bool approvedUser = IERC20(_asset).transferFrom(msg.sender, address(this), _amount);
         require(approvedUser, "Transfer of asset into this contract failed");
         bool approvedAave = IERC20(_asset).approve(address(aavePool), _amount);
         require(approvedAave, "Approval of asset into Aave pool failed");
@@ -112,24 +96,11 @@ contract LiquidityManager {
      * @param _asset Asset to supply liquidity on.
      * @param _amount Amount of asset to supply.
      */
-    function supplyLiquidityOnCompound(
-        address _asset,
-        uint256 _amount
-    ) external {
-        require(
-            IERC20(_asset).allowance(msg.sender, address(this)) >= _amount,
-            "Insufficient allowance"
-        );
-        bool approvedUser = IERC20(_asset).transferFrom(
-            msg.sender,
-            address(this),
-            _amount
-        );
+    function supplyLiquidityOnCompound(address _asset, uint256 _amount) external {
+        require(IERC20(_asset).allowance(msg.sender, address(this)) >= _amount, "Insufficient allowance");
+        bool approvedUser = IERC20(_asset).transferFrom(msg.sender, address(this), _amount);
         require(approvedUser, "Transfer of asset into this contract failed");
-        bool approvedCompound = IERC20(_asset).approve(
-            address(compoundUsdc),
-            _amount
-        );
+        bool approvedCompound = IERC20(_asset).approve(address(compoundUsdc), _amount);
         require(approvedCompound, "Approval of asset into Compound failed");
         compoundUsdc.supplyTo(msg.sender, _asset, _amount);
         emit LiquiditySupplied("Compound", _asset, _amount, msg.sender);
@@ -141,18 +112,13 @@ contract LiquidityManager {
      * @param _aaveAsset Aave asset to withdraw.
      * @param _amount Amount of asset to withdraw.
      */
-    function withdrawLiquidityFromAave(
-        address _asset,
-        address _aaveAsset,
-        uint256 _amount
-    ) external returns (uint256 amountWithdrawn) {
-        (uint256 collateral, , , , , ) = getAaveLiquidityStatus(msg.sender);
+    function withdrawLiquidityFromAave(address _asset, address _aaveAsset, uint256 _amount)
+        external
+        returns (uint256 amountWithdrawn)
+    {
+        (uint256 collateral,,,,,) = getAaveLiquidityStatus(msg.sender);
         require(collateral >= _amount, "Cannot withdraw more than borrowed");
-        bool success = IERC20(_aaveAsset).transferFrom(
-            msg.sender,
-            address(this),
-            _amount
-        );
+        bool success = IERC20(_aaveAsset).transferFrom(msg.sender, address(this), _amount);
         require(success, "Transfer of aave asset into this contract failed");
         amountWithdrawn = aavePool.withdraw(_asset, _amount, msg.sender);
     }
@@ -162,10 +128,7 @@ contract LiquidityManager {
      * @param _asset Asset to withdraw liquidity from.
      * @param _amount Amount of asset to withdraw.
      */
-    function withdrawLiquidityFromCompound(
-        address _asset,
-        uint256 _amount
-    ) external {
+    function withdrawLiquidityFromCompound(address _asset, uint256 _amount) external {
         uint256 collateral = getCompoundLiquidityStatus(msg.sender);
         require(collateral >= _amount, "Cannot withdraw more than borrowed");
         compoundUsdc.withdrawFrom(msg.sender, address(this), _asset, _amount);
@@ -180,41 +143,29 @@ contract LiquidityManager {
      * @param fee fee tier for the swap.
      * @return amountOut amount of tokenOut received.
      */
-    function swapOnUniswap(
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn,
-        uint256 amountOutMin,
-        uint24 fee
-    ) external returns (uint256 amountOut) {
+    function swapOnUniswap(address tokenIn, address tokenOut, uint256 amountIn, uint256 amountOutMin, uint24 fee)
+        external
+        returns (uint256 amountOut)
+    {
         /// @dev Transfer from vault and approve.
-        require(
-            IERC20(tokenIn).transferFrom(vault, address(this), amountIn),
-            "Vault transfer failed"
-        );
+        require(IERC20(tokenIn).transferFrom(vault, address(this), amountIn), "Vault transfer failed");
         IERC20(tokenIn).approve(address(uniswapRouter), amountIn);
 
         /// @dev Execute swap.
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
-            .ExactInputSingleParams({
-                tokenIn: tokenIn,
-                tokenOut: tokenOut,
-                fee: fee,
-                recipient: vault, /// @dev Output to vault
-                deadline: block.timestamp,
-                amountIn: amountIn,
-                amountOutMinimum: amountOutMin,
-                sqrtPriceLimitX96: 0
-            });
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
+            tokenIn: tokenIn,
+            tokenOut: tokenOut,
+            fee: fee,
+            recipient: vault,
+            /// @dev Output to vault
+            deadline: block.timestamp,
+            amountIn: amountIn,
+            amountOutMinimum: amountOutMin,
+            sqrtPriceLimitX96: 0
+        });
 
         amountOut = uniswapRouter.exactInputSingle(params);
-        emit TokensSwapped(
-            address(uniswapRouter),
-            tokenIn,
-            tokenOut,
-            amountIn,
-            amountOut
-        );
+        emit TokensSwapped(address(uniswapRouter), tokenIn, tokenOut, amountIn, amountOut);
     }
 
     /**
@@ -241,59 +192,73 @@ contract LiquidityManager {
         require(pool != address(0), "Pool doesn't exist");
 
         /// @dev Sort tokens.
-        (address token0, address token1) = tokenA < tokenB
-            ? (tokenA, tokenB)
-            : (tokenB, tokenA);
+        (address token0, address token1) = tokenA < tokenB ? (tokenA, tokenB) : (tokenB, tokenA);
 
         /// @dev Transfer tokens from vault.
         uint256 amount0 = tokenA == token0 ? amountADesired : amountBDesired;
         uint256 amount1 = tokenA == token0 ? amountBDesired : amountADesired;
 
-        require(
-            IERC20(token0).transferFrom(vault, address(this), amount0),
-            "Token0 transfer failed"
-        );
-        require(
-            IERC20(token1).transferFrom(vault, address(this), amount1),
-            "Token1 transfer failed"
-        );
+        require(IERC20(token0).transferFrom(vault, address(this), amount0), "Token0 transfer failed");
+        require(IERC20(token1).transferFrom(vault, address(this), amount1), "Token1 transfer failed");
 
         /// @dev Approve pool.
         IERC20(token0).approve(pool, amount0);
         IERC20(token1).approve(pool, amount1);
 
         /// @dev Get current pool price.
-        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(pool).slot0();
+        (uint160 sqrtPriceX96,,,,,,) = IUniswapV3Pool(pool).slot0();
 
         /// @dev Calculate liquidity using Uniswap libraries.
         uint160 sqrtRatioAX96 = TickMath.getSqrtRatioAtTick(tickLower);
         uint160 sqrtRatioBX96 = TickMath.getSqrtRatioAtTick(tickUpper);
-        liquidity = LiquidityAmounts.getLiquidityForAmounts(
-            sqrtPriceX96,
-            sqrtRatioAX96,
-            sqrtRatioBX96,
-            amount0,
-            amount1
-        );
+        liquidity =
+            LiquidityAmounts.getLiquidityForAmounts(sqrtPriceX96, sqrtRatioAX96, sqrtRatioBX96, amount0, amount1);
 
         /// @dev Add liquidity directly to pool.
-        (uint256 amount0Actual, uint256 amount1Actual) = IUniswapV3Pool(pool)
-            .mint(
-                address(this), /// @dev Recipient (this contract)
-                tickLower,
-                tickUpper,
-                liquidity,
-                abi.encode(msg.sender) /// @dev Callback data
-            );
-
-        emit LiquidityAdded(
-            pool,
-            token0,
-            token1,
+        (uint256 amount0Actual, uint256 amount1Actual) = IUniswapV3Pool(pool).mint(
+            address(this),
+            /// @dev Recipient (this contract)
+            tickLower,
+            tickUpper,
             liquidity,
-            amount0Actual,
-            amount1Actual
+            abi.encode(msg.sender)
         );
+        /// @dev Callback data
+
+        emit LiquidityAdded(pool, token0, token1, liquidity, amount0Actual, amount1Actual);
+    }
+
+    /**
+     * @notice Withdraw liquidity from Uniswap V3 pool
+     * @param _tokenA First token in the pair
+     * @param _tokenB Second token in the pair
+     * @param _fee Pool fee tier
+     * @param _liquidityToRemove Amount of liquidity to remove
+     */
+    function withdrawLiquidityFromUniswap(address _tokenA, address _tokenB, uint24 _fee, uint128 _liquidityToRemove)
+        external
+    {
+        // Get pool address
+        address pool = uniswapFactory.getPool(_tokenA, _tokenB, _fee);
+        require(pool != address(0), "Pool doesn't exist");
+
+        // Sort tokens
+        (address token0, address token1) = _tokenA < _tokenB ? (_tokenA, _tokenB) : (_tokenB, _tokenA);
+
+        // Get current pool price and tick
+        (uint160 sqrtPriceX96, int24 tick,,,,,) = IUniswapV3Pool(pool).slot0();
+
+        // Determine tick range (you might want to adjust this based on your specific requirements)
+        int24 tickLower = tick - 100;
+        int24 tickUpper = tick + 100;
+
+        // Burn liquidity
+        (uint256 amount0, uint256 amount1) = IUniswapV3Pool(pool).burn(tickLower, tickUpper, _liquidityToRemove);
+
+        // Collect tokens to vault
+        IUniswapV3Pool(pool).collect(vault, tickLower, tickUpper, uint128(amount0), uint128(amount1));
+
+        emit LiquidityRemoved(pool, token0, token1, _liquidityToRemove, amount0, amount1);
     }
 
     /**
@@ -306,9 +271,7 @@ contract LiquidityManager {
      * @return ltv The loan to value of The user
      * @return healthFactor The current health factor of the user
      */
-    function getAaveLiquidityStatus(
-        address _user
-    )
+    function getAaveLiquidityStatus(address _user)
         public
         view
         returns (
@@ -328,9 +291,43 @@ contract LiquidityManager {
      * @param _user The address of the user.
      * @return balance The user's compound liquidity balance.
      */
-    function getCompoundLiquidityStatus(
-        address _user
-    ) public view returns (uint256 balance) {
+    function getCompoundLiquidityStatus(address _user) public view returns (uint256 balance) {
         balance = compoundUsdc.balanceOf(_user);
+    }
+
+    /**
+     * @notice Get Uniswap V3 liquidity position details
+     * @param _user Address of the user
+     * @param _tokenA First token in the pair
+     * @param _tokenB Second token in the pair
+     * @param _fee Pool fee tier
+     * @return liquidity Current liquidity in the pool
+     * @return amount0 Current amount of token0 in the position
+     * @return amount1 Current amount of token1 in the position
+     */
+    function getUniswapLiquidityStatus(address _user, address _tokenA, address _tokenB, uint24 _fee)
+        public
+        view
+        returns (uint128 liquidity, uint256 amount0, uint256 amount1)
+    {
+        // Get pool address
+        address pool = uniswapFactory.getPool(_tokenA, _tokenB, _fee);
+        require(pool != address(0), "Pool doesn't exist");
+
+        // Sort tokens
+        (address token0, address token1) = _tokenA < _tokenB ? (_tokenA, _tokenB) : (_tokenB, _tokenA);
+
+        // Get current pool price and tick
+        (uint160 sqrtPriceX96, int24 tick,,,,,) = IUniswapV3Pool(pool).slot0();
+
+        // Determine tick range (you might want to adjust this based on your specific requirements)
+        int24 tickLower = tick - 100;
+        int24 tickUpper = tick + 100;
+
+        // Destructure only the first three values
+        (liquidity, amount0, amount1,,) =
+            IUniswapV3Pool(pool).positions(keccak256(abi.encodePacked(_user, tickLower, tickUpper)));
+
+        return (liquidity, amount0, amount1);
     }
 }
