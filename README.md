@@ -2,26 +2,26 @@
 
 ![CentoAI Logo](https://via.placeholder.com/150) <!-- Replace with logo -->
 
-CentoAI is an AI-powered DeFi portfolio manager that optimizes yield farming and flashloan arbitrage by dynamically reallocating funds across top DeFi protocols. Built using **Coinbase AgentKit**, **The Graph**, and **Lit Protocol**, CentoAI automates strategy execution securely on **Base** for maximum yield efficiency.
+CentoAI is an AI-powered DeFi portfolio manager that optimizes yield farming by dynamically reallocating funds across top DeFi protocols. Built using **Coinbase AgentKit**, **Warden Protocol**, and **Lit Protocol**, CentoAI automates strategy execution securely on **Base** for maximum yield efficiency.
 
 ---
 
 ## 🚀 Features
 
-- **AI-Driven Yield Optimization**: Dynamically reallocates funds to the highest-yielding opportunities across DeFi protocols.
-- **Flashloan Arbitrage**: Identifies and executes profitable arbitrage opportunities using flashloans.
-- **Secure Execution**: Leverages **Lit Protocol** for secure transaction signing and policy enforcement.
-- **Real-Time Data**: Uses **The Graph** to index and query real-time protocol metrics (e.g., APYs, liquidity).
+- **AI-Driven Yield Optimization**: Dynamically reallocates funds to the highest-yielding opportunities across DeFi protocols like Aave, Compound, and Uniswap.
+- **On-Chain Automation**: Uses **Warden Protocol** to automate fund movements based on real-time APY data.
+- **Secure Execution**: Leverages **Lit Protocol** for secure transaction signing and non-custodial key management.
 - **Base Deployment**: Deployed on **Base** for low-cost, high-speed transactions.
+- **User-Friendly Interface**: Built with **OnchainKit** for seamless wallet integration and portfolio management.
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Core Framework**: [Coinbase AgentKit](https://developer.coinbase.com/agentkit)
-- **Blockchain**: [Base](https://base.org)
-- **Data Indexing**: [The Graph](https://thegraph.com)
+- **Automation**: [Warden Protocol](https://wardenprotocol.org)
 - **Security**: [Lit Protocol](https://litprotocol.com)
+- **Blockchain**: [Base](https://base.org)
 - **Frontend**: React + OnchainKit
 - **Backend**: Node.js
 
@@ -30,20 +30,20 @@ CentoAI is an AI-powered DeFi portfolio manager that optimizes yield farming and
 ## 📊 How It Works
 
 1. **Data Aggregation**:  
-   - The Graph subgraphs index real-time data from top DeFi protocols (e.g., Aave, Uniswap).  
-   - Historical yield data is fetched from Covalent's API (optional).
+   - Fetch real-time APY data from DeFi protocols (e.g., Aave, Compound, Uniswap).  
+   - Use **Warden Protocol** to monitor and analyze yield opportunities.
 
 2. **AI Decision Engine**:  
-   - Analyzes yield opportunities and arbitrage strategies using machine learning models.  
-   - Determines optimal fund reallocation based on risk-adjusted returns.
+   - Analyze yield opportunities using machine learning models.  
+   - Determine optimal fund reallocation based on risk-adjusted returns.
 
 3. **Secure Execution**:  
-   - Lit Protocol enforces policies (e.g., "only execute if APY > X%").  
-   - Coinbase AgentKit handles onchain actions (swaps, deposits, flashloans).
+   - **Lit Protocol** enforces policies (e.g., "only execute if APY > X%").  
+   - **Coinbase AgentKit** handles on-chain actions (e.g., deposits, withdrawals, swaps).
 
 4. **User Interface**:  
    - A dashboard displays portfolio performance, strategy configurations, and transaction history.  
-   - Built with React and OnchainKit for seamless wallet integration.
+   - Built with **React** and **OnchainKit** for seamless wallet integration.
 
 ---
 
@@ -54,9 +54,8 @@ CentoAI is designed to compete in the following **ETHGlobal Agentic Ethereum** t
 ### 🟩 Core Tracks
 1. **Coinbase Developer Platform**  
    - Most Innovative Use of AgentKit  
-   - Best Combination of AgentKit + OnchainKit
-   - Best AgentKit documentation improvement
-   - Viral Consumer app award
+   - Best Combination of AgentKit + OnchainKit  
+   - Viral Consumer App Award  
    - AgentKit Pool Prize  
 
 2. **Base**  
@@ -64,11 +63,11 @@ CentoAI is designed to compete in the following **ETHGlobal Agentic Ethereum** t
 
 3. **Lit Protocol**  
    - Best DeFAI Agent  
-   - Most Creative Integration
-   - Pool Prize
+   - Most Creative Integration  
+   - Pool Prize  
 
-4. **The Graph**  
-   - Best Use of The Graph with an AI Agent 
+4. **Warden Protocol**  
+   - Best Use of Warden Protocol for On-Chain Automation  
 
 ---
 
@@ -122,6 +121,12 @@ contracts/
     ```bash
     forge script script/DeployArbitrage.s.sol:DeployArbitrage <BASE_SEPOLIA_RPC_URL> --private-key <PRIVATE_KEY> --broadcast --verify --verifier blockscout --verifier-url https://base-sepolia.blockscout.com/api/
     ```
+   ```bash
+    forge script script/DeployLiquidityManager.sol:DeployLiquidityManager <BASE_SEPOLIA_RPC_URL> --private-key <PRIVATE_KEY> --broadcast --verify --verifier blockscout --verifier-url https://base-sepolia.blockscout.com/api/
+    ```
+   ```bash
+    forge script script/DeployLiquidityManager.sol:DeployLiquidityManager <BASE_SEPOLIA_RPC_URL> --private-key <PRIVATE_KEY> --broadcast --verify --verifier blockscout --verifier-url https://base-sepolia.blockscout.com/api/
+    ```
 
 ## Testing
 Foundry is used for testing the Arbitrage contract. To run the tests:
@@ -142,4 +147,4 @@ This project is licensed under the MIT License. See LICENSE for details.
 ## 🙏 Acknowledgments
 ETHGlobal for hosting the Agentic Ethereum hackathon.
 
-Coinbase, Base, Lit Protocol, and The Graph for their support and tooling.
+Coinbase, Base, Lit Protocol, and Warden Protocol for their support and tooling.

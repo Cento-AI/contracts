@@ -27,14 +27,9 @@ abstract contract CometExtInterface {
         bytes32 s
     ) external virtual;
 
-    function collateralBalanceOf(
-        address account,
-        address asset
-    ) external view virtual returns (uint128);
+    function collateralBalanceOf(address account, address asset) external view virtual returns (uint128);
 
-    function baseTrackingAccrued(
-        address account
-    ) external view virtual returns (uint64);
+    function baseTrackingAccrued(address account) external view virtual returns (uint64);
 
     function baseAccrualScale() external view virtual returns (uint64);
 
@@ -72,10 +67,7 @@ abstract contract CometExtInterface {
      * @param amount The number of tokens that are approved (-1 means infinite)
      * @return Whether or not the approval succeeded
      */
-    function approve(
-        address spender,
-        uint256 amount
-    ) external virtual returns (bool);
+    function approve(address spender, uint256 amount) external virtual returns (bool);
 
     /**
      * @notice Get the current allowance from `owner` for `spender`
@@ -83,14 +75,7 @@ abstract contract CometExtInterface {
      * @param spender The address of the account which may transfer tokens
      * @return The number of tokens allowed to be spent (-1 means infinite)
      */
-    function allowance(
-        address owner,
-        address spender
-    ) external view virtual returns (uint256);
+    function allowance(address owner, address spender) external view virtual returns (uint256);
 
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 amount
-    );
+    event Approval(address indexed owner, address indexed spender, uint256 amount);
 }
