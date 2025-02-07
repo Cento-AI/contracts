@@ -3,16 +3,16 @@ pragma solidity 0.8.22;
 
 import {Test, console} from "forge-std/Test.sol";
 import {StdUtils} from "forge-std/StdUtils.sol";
-import {LiquidityManager} from "../../src/LiquidityManager.sol";
-import {CometMainInterface} from "../../src/interfaces/IComet.sol";
-import {CometExtInterface} from "../../src/interfaces/ICometExt.sol";
+import {VaultFactory} from "../../src/VaultFactory.sol";
+import {Vault} from "../../src/Vault.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import {IUniswapV3Factory} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol";
 
 contract LiquidityManagerTest is Test {
-    LiquidityManager public supplyLiquidity;
+    VaultFactory public vaultFactory;
+    Vault public vault;
     HelperConfig public helperConfig;
     HelperConfig.NetworkConfig public networkConfig;
     address owner = address(1);
@@ -36,15 +36,13 @@ contract LiquidityManagerTest is Test {
         networkConfig = helperConfig.getBaseSepoliaConfig();
         fork = vm.createSelectFork(BASE_SEPOLIA_RPC_URL_2);
         vm.startPrank(owner);
-        supplyLiquidity = new LiquidityManager(
-            address(networkConfig.aavePool),
-            address(networkConfig.compoundUsdc),
-            address(networkConfig.uniswapRouter),
-            address(networkConfig.uniswapFactory),
-            address(networkConfig.vault)
-        );
-        vm.stopPrank();
+        vaultFactory = new VaultFactory();
+        address _vault = vaultFactory.createVault();
+        vault = Vault(_vault);
         deal(networkConfig.usdc, owner, 100 * 1e6);
+        IERC20(networkConfig.usdc).approve(address(vault), 100 * 1e6);
+        vault.depositERC20(networkConfig.usdc, 100 * 1e6);
+        vm.stopPrank();
 
         // // Fund the vault with USDC and WETH for testing
         // deal(networkConfig.usdc, networkConfig.vault, 100_000 * 1e6); // 100k USDC
@@ -197,49 +195,70 @@ contract LiquidityManagerTest is Test {
     // }
 
     function testSupplyUSDCOnAave() public {
-        vm.startPrank(owner);
-        IERC20(networkConfig.usdc).approve(address(supplyLiquidity), 69);
-        supplyLiquidity.supplyLiquidityOnAave(networkConfig.usdc, 69);
-        (uint256 totalCollateralBase, , , , , ) = supplyLiquidity
-            .getAaveLiquidityStatus(owner);
+        vm.startPrank(networkConfig.agent);
+        vault.lendOnAave(networkConfig.usdc, 10 * 1e6);
+        (uint256 totalCollateralBase, , , , , ) = vault
+            .getAaveLiquidityStatus();
+        Vault.UserBalance memory userBalance = vault.getStruct(
+            networkConfig.usdc
+        );
+        assertEq(userBalance.investedInAave, 10 * 1e6);
+        assertEq(userBalance.balance, 90 * 1e6);
         assertGt(totalCollateralBase, 0);
-        assertEq(IERC20(networkConfig.aaveUsdc).balanceOf(address(owner)), 69);
+        assertEq(
+            IERC20(networkConfig.aaveUsdc).balanceOf(address(vault)),
+            10 * 1e6
+        );
         vm.stopPrank();
     }
 
     function testWithdrawUSDCFromAave() public {
-        vm.startPrank(owner);
-        IERC20(networkConfig.usdc).approve(address(supplyLiquidity), 69);
-        supplyLiquidity.supplyLiquidityOnAave(networkConfig.usdc, 69);
-        IERC20(networkConfig.aaveUsdc).approve(address(supplyLiquidity), 69);
-        supplyLiquidity.withdrawLiquidityFromAave(
+        vm.startPrank(networkConfig.agent);
+        vault.lendOnAave(networkConfig.usdc, 10 * 1e6);
+        uint256 amountWithdrawn = vault.withdrawFromAave(
             networkConfig.usdc,
-            networkConfig.aaveUsdc,
-            69
+            5 * 1e6
         );
-        (uint256 totalCollateralBase, , , , , ) = supplyLiquidity
-            .getAaveLiquidityStatus(owner);
-        assertEq(totalCollateralBase, 0);
+        assertEq(amountWithdrawn, 5 * 1e6);
+        (uint256 totalCollateralBase, , , , , ) = vault
+            .getAaveLiquidityStatus();
+        assertGt(totalCollateralBase, 0);
+        Vault.UserBalance memory userBalance = vault.getStruct(
+            networkConfig.usdc
+        );
+        assertEq(userBalance.balance, 95 * 1e6);
+        assertEq(
+            IERC20(networkConfig.usdc).balanceOf(address(vault)),
+            95 * 1e6
+        );
         vm.stopPrank();
     }
 
     function testSupplyUSDCOnCompound() public {
-        vm.startPrank(owner);
-        IERC20(networkConfig.usdc).approve(address(supplyLiquidity), 69000000);
-        supplyLiquidity.supplyLiquidityOnCompound(networkConfig.usdc, 69000000);
-        assertGt(supplyLiquidity.getCompoundLiquidityStatus(owner), 0);
+        vm.startPrank(networkConfig.agent);
+        vault.lendOnCompound(networkConfig.usdc, 10 * 1e6);
+        assertGt(vault.getCompoundLiquidityStatus(), 0);
+        Vault.UserBalance memory userBalance = vault.getStruct(
+            networkConfig.usdc
+        );
+        assertEq(userBalance.investedInCompound, 10 * 1e6);
+        assertEq(userBalance.balance, 90 * 1e6);
         vm.stopPrank();
     }
 
     function testWithdrawUSDCFromCompound() public {
-        vm.startPrank(owner);
-        IERC20(networkConfig.usdc).approve(address(supplyLiquidity), 69000000);
-        supplyLiquidity.supplyLiquidityOnCompound(networkConfig.usdc, 69000000);
-        CometExtInterface(networkConfig.compoundUsdc).allow(
-            address(supplyLiquidity),
-            true
+        vm.startPrank(networkConfig.agent);
+        vault.lendOnCompound(networkConfig.usdc, 10 * 1e6);
+        uint256 amountWithdrawn = vault.withdrawFromCompound(
+            networkConfig.usdc,
+            5 * 1e6
         );
-        supplyLiquidity.withdrawLiquidityFromCompound(networkConfig.usdc, 100);
-        assertLt(supplyLiquidity.getCompoundLiquidityStatus(owner), 69000000);
+        assertEq(amountWithdrawn, 5 * 1e6);
+        Vault.UserBalance memory userBalance = vault.getStruct(
+            networkConfig.usdc
+        );
+        assertEq(userBalance.balance, 95 * 1e6);
+        assertEq(userBalance.investedInCompound, 5 * 1e6);
+        vm.stopPrank();
     }
 }

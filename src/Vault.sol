@@ -2,6 +2,7 @@
 pragma solidity ^0.8.22;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./LiquidityManager.sol";
 
 /**
  * @title Vault
@@ -11,28 +12,48 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * @dev It allows users to deposit and withdraw ERC20 tokens.
  * @dev It also allows users to get their balance of a specific token.
  */
-contract Vault is Ownable(msg.sender) {
+contract Vault is Ownable, LiquidityManager {
     /// @notice Liquidity manager address.
     address public liquidityManager;
 
-    /// @notice Mapping of user address to token address to balance.
-    mapping(address => mapping(address => uint256))
-        public userAddressToBalances;
+    address public agent;
 
-    event ERC20Deposited(
-        address indexed user,
-        address indexed token,
-        uint256 amount
-    );
-    event ERC20Withdrawn(
-        address indexed user,
-        address indexed token,
-        uint256 amount
-    );
+    struct UserBalance {
+        address asset;
+        uint256 balance;
+        uint256 investedInAave;
+        uint256 investedInCompound;
+        uint256 investedInUniswap;
+    }
 
-    modifier onlyLiquidityManager() {
-        require(msg.sender == liquidityManager, "Only liquidity manager");
+    /// @notice Mapping of user address to token address to struct.
+    mapping(address => UserBalance) public tokenAddressToStruct;
+
+    event ERC20Deposited(address indexed token, uint256 amount);
+    event ERC20Withdrawn(address indexed token, uint256 amount);
+
+    modifier onlyAgent() {
+        require(msg.sender == agent, "Only agent");
         _;
+    }
+
+    constructor(
+        address _owner,
+        address _agent,
+        address _aavePool,
+        address _compoundUsdc,
+        address _uniswapRouter,
+        address _uniswapFactory
+    )
+        Ownable(_owner)
+        LiquidityManager(
+            _aavePool,
+            _compoundUsdc,
+            _uniswapRouter,
+            _uniswapFactory
+        )
+    {
+        agent = _agent;
     }
 
     /**
@@ -40,7 +61,7 @@ contract Vault is Ownable(msg.sender) {
      * @param _token Token address to deposit.
      * @param _amount Amount of token to deposit.
      */
-    function depositERC20(address _token, uint256 _amount) external {
+    function depositERC20(address _token, uint256 _amount) external onlyOwner {
         require(
             IERC20(_token).allowance(msg.sender, address(this)) >= _amount,
             "Insufficient allowance"
@@ -51,8 +72,8 @@ contract Vault is Ownable(msg.sender) {
             _amount
         );
         require(success, "Transfer failed");
-        userAddressToBalances[msg.sender][_token] += _amount;
-        emit ERC20Deposited(msg.sender, _token, _amount);
+        tokenAddressToStruct[_token].balance += _amount;
+        emit ERC20Deposited(_token, _amount);
     }
 
     /**
@@ -60,59 +81,136 @@ contract Vault is Ownable(msg.sender) {
      * @param _token Token address to withdraw.
      * @param _amount Amount of token to withdraw.
      */
-    function withdrawERC20(address _token, uint256 _amount) external {
+    function withdrawERC20(address _token, uint256 _amount) external onlyOwner {
         require(
-            userAddressToBalances[msg.sender][_token] >= _amount,
+            tokenAddressToStruct[_token].balance >= _amount,
             "Insufficient balance"
         );
-        IERC20(_token).approve(msg.sender, _amount);
-        IERC20(_token).transferFrom(address(this), msg.sender, _amount);
-        userAddressToBalances[msg.sender][_token] -= _amount;
-        emit ERC20Withdrawn(msg.sender, _token, _amount);
+        IERC20(_token).approve(owner(), _amount);
+        bool success = IERC20(_token).transfer(owner(), _amount);
+        require(success, "Transfer failed");
+        tokenAddressToStruct[_token].balance -= _amount;
+        emit ERC20Withdrawn(_token, _amount);
     }
 
     /**
-     * @notice Set the liquidity manager address.
-     * @param _liquidityManager Liquidity manager address to set.
+     * @notice Set the agent address.
+     * @param _agent Agent address to set.
      */
-    function setLiquidityManager(address _liquidityManager) public onlyOwner {
-        liquidityManager = _liquidityManager;
+    function setAgent(address _agent) public onlyOwner {
+        agent = _agent;
     }
 
-    /**
-     * @notice Transfer ERC20 tokens to the liquidity manager.
-     * @param _onBehalfOf Address of the user to transfer the tokens on behalf of to.
-     * @param _asset Address of the token to transfer.
-     * @param _amount Amount of tokens to transfer.
-     */
-    function transferERC20ToLiquidityManager(
-        address _onBehalfOf,
+    function lendOnAave(address _asset, uint256 _amount) external onlyAgent {
+        require(
+            tokenAddressToStruct[_asset].balance >= _amount,
+            "Insufficient balance"
+        );
+        supplyLiquidityOnAave(_asset, _amount);
+        tokenAddressToStruct[_asset].balance -= _amount;
+        tokenAddressToStruct[_asset].investedInAave += _amount;
+    }
+
+    function lendOnCompound(
         address _asset,
         uint256 _amount
-    ) public onlyLiquidityManager {
+    ) external onlyAgent {
         require(
-            userAddressToBalances[_onBehalfOf][_asset] >= _amount,
+            tokenAddressToStruct[_asset].balance >= _amount,
             "Insufficient balance"
         );
-        userAddressToBalances[_onBehalfOf][_asset] -= _amount;
-        bool success = IERC20(_asset).transferFrom(
-            address(this),
-            liquidityManager,
-            _amount
+        supplyLiquidityOnCompound(_asset, _amount);
+        tokenAddressToStruct[_asset].balance -= _amount;
+        tokenAddressToStruct[_asset].investedInCompound += _amount;
+    }
+
+    function lendOnUniswap(
+        address _tokenA,
+        address _tokenB,
+        uint256 _amountA,
+        uint256 _amountB,
+        uint24 _fee,
+        int24 _tickLower,
+        int24 _tickUpper
+    ) external onlyAgent {
+        require(
+            tokenAddressToStruct[_tokenA].balance >= _amountA,
+            "Insufficient balance"
         );
-        require(success, "Transfer failed");
+        require(
+            tokenAddressToStruct[_tokenB].balance >= _amountB,
+            "Insufficient balance"
+        );
+        supplyLiquidityOnUniswap(
+            _tokenA,
+            _tokenB,
+            _amountA,
+            _amountB,
+            _fee,
+            _tickLower,
+            _tickUpper
+        );
+        tokenAddressToStruct[_tokenA].balance -= _amountA;
+        tokenAddressToStruct[_tokenB].balance -= _amountB;
+        tokenAddressToStruct[_tokenA].investedInUniswap += _amountA;
+        tokenAddressToStruct[_tokenB].investedInUniswap += _amountB;
+    }
+
+    function swapOnUniswap(
+        address _tokenIn,
+        address _tokenOut,
+        uint256 _amountIn,
+        uint24 _fee
+    ) external onlyAgent returns (uint256 amountOut) {
+        require(
+            tokenAddressToStruct[_tokenIn].balance >= _amountIn,
+            "Insufficient balance"
+        );
+        amountOut = swapOnUniswap(_tokenIn, _tokenOut, _amountIn, 1, _fee);
+        tokenAddressToStruct[_tokenIn].balance -= _amountIn;
+        tokenAddressToStruct[_tokenOut].balance += amountOut;
+    }
+
+    function withdrawFromAave(
+        address _asset,
+        uint256 _amount
+    ) external onlyAgent returns (uint256 amountWithdrawn) {
+        amountWithdrawn = withdrawLiquidityFromAave(_asset, _amount);
+        tokenAddressToStruct[_asset].balance += _amount;
+        tokenAddressToStruct[_asset].investedInAave -= _amount;
+    }
+
+    function withdrawFromCompound(
+        address _asset,
+        uint256 _amount
+    ) external onlyAgent returns (uint256 amountWithdrawn) {
+        amountWithdrawn = withdrawLiquidityFromCompound(_asset, _amount);
+        tokenAddressToStruct[_asset].balance += _amount;
+        tokenAddressToStruct[_asset].investedInCompound -= _amount;
+    }
+
+    function withdrawFromUniswap(
+        address _tokenA,
+        address _tokenB,
+        uint24 _fee,
+        uint128 _liquidityToRemove
+    ) external onlyAgent {
+        withdrawLiquidityFromUniswap(
+            _tokenA,
+            _tokenB,
+            _fee,
+            _liquidityToRemove
+        );
     }
 
     /**
-     * @notice Get the balance of a specific token for a user.
-     * @param _user User address to get the balance of.
+     * @notice Get the struct details for a token..
      * @param _token Token address to get the balance of.
      * @return balance Balance of the user for the token.
      */
-    function getERC20Balance(
-        address _user,
+    function getStruct(
         address _token
-    ) external view returns (uint256) {
-        return userAddressToBalances[_user][_token];
+    ) external view returns (UserBalance memory) {
+        return tokenAddressToStruct[_token];
     }
 }
