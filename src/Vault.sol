@@ -13,9 +13,6 @@ import "./LiquidityManager.sol";
  * @dev It also allows users to get their balance of a specific token.
  */
 contract Vault is Ownable, LiquidityManager {
-    /// @notice Liquidity manager address.
-    address public liquidityManager;
-
     address public agent;
 
     struct UserBalance {
@@ -32,8 +29,31 @@ contract Vault is Ownable, LiquidityManager {
     event ERC20Deposited(address indexed token, uint256 amount);
     event ERC20Withdrawn(address indexed token, uint256 amount);
 
+    error InvalidProtocol(string protocol);
+    error AerodromeNotImplemented();
+
     modifier onlyAgent() {
         require(msg.sender == agent, "Only agent");
+        _;
+    }
+
+    modifier validLendingProtocol(string memory protocol) {
+        if (
+            keccak256(bytes(protocol)) != keccak256(bytes("aave")) &&
+            keccak256(bytes(protocol)) != keccak256(bytes("compound"))
+        ) {
+            revert InvalidProtocol(protocol);
+        }
+        _;
+    }
+
+    modifier validLPProtocol(string memory protocol) {
+        if (
+            keccak256(bytes(protocol)) != keccak256(bytes("uniswap")) &&
+            keccak256(bytes(protocol)) != keccak256(bytes("aerodrome"))
+        ) {
+            revert InvalidProtocol(protocol);
+        }
         _;
     }
 
@@ -101,59 +121,117 @@ contract Vault is Ownable, LiquidityManager {
         agent = _agent;
     }
 
-    function lendOnAave(address _asset, uint256 _amount) external onlyAgent {
+    function lendTokens(
+        string memory protocol,
+        address token,
+        uint256 amount
+    ) external onlyAgent validLendingProtocol(protocol) {
         require(
-            tokenAddressToStruct[_asset].balance >= _amount,
+            tokenAddressToStruct[token].balance >= amount,
             "Insufficient balance"
         );
-        supplyLiquidityOnAave(_asset, _amount);
-        tokenAddressToStruct[_asset].balance -= _amount;
-        tokenAddressToStruct[_asset].investedInAave += _amount;
+
+        if (keccak256(bytes(protocol)) == keccak256(bytes("aave"))) {
+            supplyLiquidityOnAave(token, amount);
+            tokenAddressToStruct[token].investedInAave += amount;
+        } else if (keccak256(bytes(protocol)) == keccak256(bytes("compound"))) {
+            supplyLiquidityOnCompound(token, amount);
+            tokenAddressToStruct[token].investedInCompound += amount;
+        }
+
+        tokenAddressToStruct[token].balance -= amount;
     }
 
-    function lendOnCompound(
-        address _asset,
-        uint256 _amount
-    ) external onlyAgent {
-        require(
-            tokenAddressToStruct[_asset].balance >= _amount,
-            "Insufficient balance"
-        );
-        supplyLiquidityOnCompound(_asset, _amount);
-        tokenAddressToStruct[_asset].balance -= _amount;
-        tokenAddressToStruct[_asset].investedInCompound += _amount;
+    function withdrawLentTokens(
+        string memory protocol,
+        address token,
+        uint256 amount
+    )
+        external
+        onlyAgent
+        validLendingProtocol(protocol)
+        returns (uint256 amountWithdrawn)
+    {
+        if (keccak256(bytes(protocol)) == keccak256(bytes("aave"))) {
+            require(
+                tokenAddressToStruct[token].investedInAave >= amount,
+                "Insufficient invested amount"
+            );
+            amountWithdrawn = withdrawLiquidityFromAave(token, amount);
+            tokenAddressToStruct[token].investedInAave -= amount;
+        } else if (keccak256(bytes(protocol)) == keccak256(bytes("compound"))) {
+            require(
+                tokenAddressToStruct[token].investedInCompound >= amount,
+                "Insufficient invested amount"
+            );
+            amountWithdrawn = withdrawLiquidityFromCompound(token, amount);
+            tokenAddressToStruct[token].investedInCompound -= amount;
+        }
+
+        tokenAddressToStruct[token].balance += amountWithdrawn;
+        return amountWithdrawn;
     }
 
-    function lendOnUniswap(
-        address _tokenA,
-        address _tokenB,
-        uint256 _amountA,
-        uint256 _amountB,
-        uint24 _fee,
-        int24 _tickLower,
-        int24 _tickUpper
-    ) external onlyAgent {
+    // TODO Add aerodrome
+    function addLiquidity(
+        string memory protocol,
+        address token0,
+        address token1,
+        uint256 amount0,
+        uint256 amount1,
+        uint24 fee,
+        int24 tickLower,
+        int24 tickUpper
+    ) external onlyAgent validLPProtocol(protocol) {
         require(
-            tokenAddressToStruct[_tokenA].balance >= _amountA,
-            "Insufficient balance"
+            tokenAddressToStruct[token0].balance >= amount0,
+            "Insufficient balance token0"
         );
         require(
-            tokenAddressToStruct[_tokenB].balance >= _amountB,
-            "Insufficient balance"
+            tokenAddressToStruct[token1].balance >= amount1,
+            "Insufficient balance token1"
         );
-        supplyLiquidityOnUniswap(
-            _tokenA,
-            _tokenB,
-            _amountA,
-            _amountB,
-            _fee,
-            _tickLower,
-            _tickUpper
-        );
-        tokenAddressToStruct[_tokenA].balance -= _amountA;
-        tokenAddressToStruct[_tokenB].balance -= _amountB;
-        tokenAddressToStruct[_tokenA].investedInUniswap += _amountA;
-        tokenAddressToStruct[_tokenB].investedInUniswap += _amountB;
+
+        if (keccak256(bytes(protocol)) == keccak256(bytes("uniswap"))) {
+            supplyLiquidityOnUniswap(
+                token0,
+                token1,
+                amount0,
+                amount1,
+                fee,
+                tickLower,
+                tickUpper
+            );
+            tokenAddressToStruct[token0].investedInUniswap += amount0;
+            tokenAddressToStruct[token1].investedInUniswap += amount1;
+        } else if (
+            keccak256(bytes(protocol)) == keccak256(bytes("aerodrome"))
+        ) {
+            revert AerodromeNotImplemented();
+        }
+
+        tokenAddressToStruct[token0].balance -= amount0;
+        tokenAddressToStruct[token1].balance -= amount1;
+    }
+
+    function removeLiquidity(
+        string memory protocol,
+        address token0,
+        address token1,
+        uint256 liquidityAmount
+    ) external onlyAgent validLPProtocol(protocol) {
+        if (keccak256(bytes(protocol)) == keccak256(bytes("uniswap"))) {
+            withdrawLiquidityFromUniswap(
+                token0,
+                token1,
+                3000, // default fee
+                uint128(liquidityAmount)
+            );
+        } else if (
+            keccak256(bytes(protocol)) == keccak256(bytes("aerodrome"))
+        ) {
+            revert AerodromeNotImplemented();
+        }
     }
 
     function swapOnUniswap(
@@ -169,38 +247,6 @@ contract Vault is Ownable, LiquidityManager {
         amountOut = swapOnUniswap(_tokenIn, _tokenOut, _amountIn, 1, _fee);
         tokenAddressToStruct[_tokenIn].balance -= _amountIn;
         tokenAddressToStruct[_tokenOut].balance += amountOut;
-    }
-
-    function withdrawFromAave(
-        address _asset,
-        uint256 _amount
-    ) external onlyAgent returns (uint256 amountWithdrawn) {
-        amountWithdrawn = withdrawLiquidityFromAave(_asset, _amount);
-        tokenAddressToStruct[_asset].balance += _amount;
-        tokenAddressToStruct[_asset].investedInAave -= _amount;
-    }
-
-    function withdrawFromCompound(
-        address _asset,
-        uint256 _amount
-    ) external onlyAgent returns (uint256 amountWithdrawn) {
-        amountWithdrawn = withdrawLiquidityFromCompound(_asset, _amount);
-        tokenAddressToStruct[_asset].balance += _amount;
-        tokenAddressToStruct[_asset].investedInCompound -= _amount;
-    }
-
-    function withdrawFromUniswap(
-        address _tokenA,
-        address _tokenB,
-        uint24 _fee,
-        uint128 _liquidityToRemove
-    ) external onlyAgent {
-        withdrawLiquidityFromUniswap(
-            _tokenA,
-            _tokenB,
-            _fee,
-            _liquidityToRemove
-        );
     }
 
     /**
