@@ -12,17 +12,17 @@ contract VaultFactory is HelperConfig {
         activeNetworkConfig = getBaseSepoliaConfig();
     }
 
-    function createVault() external returns (address vault) {
+    function createVault(address owner) external returns (address vault) {
         Vault vaultInstance = new Vault(
-            msg.sender,
+            owner,
             activeNetworkConfig.agent,
             activeNetworkConfig.aavePool,
             activeNetworkConfig.compoundUsdc,
             activeNetworkConfig.uniswapRouter,
             activeNetworkConfig.uniswapFactory
         );
-        ownerToVaultAddress[msg.sender] = address(vaultInstance);
-        emit VaultCreated(msg.sender, address(vaultInstance));
+        ownerToVaultAddress[owner] = address(vaultInstance);
+        emit VaultCreated(owner, address(vaultInstance));
         return address(vaultInstance);
     }
 
