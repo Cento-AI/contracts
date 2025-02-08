@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -36,17 +36,14 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
     error AerodromeNotImplemented();
 
     modifier onlyAgent() {
-        require(
-            msg.sender == agent || msg.sender == owner(),
-            "Only agent or owner"
-        );
+        require(msg.sender == agent || msg.sender == owner(), "Only agent or owner");
         _;
     }
 
     modifier validLendingProtocol(string memory protocol) {
         if (
-            keccak256(bytes(protocol)) != keccak256(bytes("aave")) &&
-            keccak256(bytes(protocol)) != keccak256(bytes("compound"))
+            keccak256(bytes(protocol)) != keccak256(bytes("aave"))
+                && keccak256(bytes(protocol)) != keccak256(bytes("compound"))
         ) {
             revert InvalidProtocol(protocol);
         }
@@ -55,8 +52,8 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
 
     modifier validLPProtocol(string memory protocol) {
         if (
-            keccak256(bytes(protocol)) != keccak256(bytes("uniswap")) &&
-            keccak256(bytes(protocol)) != keccak256(bytes("aerodrome"))
+            keccak256(bytes(protocol)) != keccak256(bytes("uniswap"))
+                && keccak256(bytes(protocol)) != keccak256(bytes("aerodrome"))
         ) {
             revert InvalidProtocol(protocol);
         }
@@ -78,15 +75,7 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
         address _compoundUsdc,
         address _uniswapRouter,
         address _uniswapFactory
-    )
-        Ownable(_owner)
-        LiquidityManager(
-            _aavePool,
-            _compoundUsdc,
-            _uniswapRouter,
-            _uniswapFactory
-        )
-    {
+    ) Ownable(_owner) LiquidityManager(_aavePool, _compoundUsdc, _uniswapRouter, _uniswapFactory) {
         agent = _agent;
     }
 
@@ -96,15 +85,8 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
      * @param _amount Amount of token to deposit.
      */
     function depositERC20(address _token, uint256 _amount) external onlyOwner {
-        require(
-            IERC20(_token).allowance(msg.sender, address(this)) >= _amount,
-            "Insufficient allowance"
-        );
-        bool success = IERC20(_token).transferFrom(
-            msg.sender,
-            address(this),
-            _amount
-        );
+        require(IERC20(_token).allowance(msg.sender, address(this)) >= _amount, "Insufficient allowance");
+        bool success = IERC20(_token).transferFrom(msg.sender, address(this), _amount);
         require(success, "Transfer failed");
         tokenAddressToStruct[_token].balance += _amount;
         emit ERC20Deposited(_token, _amount);
@@ -116,10 +98,7 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
      * @param _amount Amount of token to withdraw.
      */
     function withdrawERC20(address _token, uint256 _amount) external onlyOwner {
-        require(
-            tokenAddressToStruct[_token].balance >= _amount,
-            "Insufficient balance"
-        );
+        require(tokenAddressToStruct[_token].balance >= _amount, "Insufficient balance");
         IERC20(_token).approve(owner(), _amount);
         bool success = IERC20(_token).transfer(owner(), _amount);
         require(success, "Transfer failed");
@@ -141,15 +120,12 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
      * @param token The token to lend.
      * @param amount The amount of token to lend.
      */
-    function lendTokens(
-        string memory protocol,
-        address token,
-        uint256 amount
-    ) external onlyAgent validLendingProtocol(protocol) {
-        require(
-            tokenAddressToStruct[token].balance >= amount,
-            "Insufficient balance"
-        );
+    function lendTokens(string memory protocol, address token, uint256 amount)
+        external
+        onlyAgent
+        validLendingProtocol(protocol)
+    {
+        require(tokenAddressToStruct[token].balance >= amount, "Insufficient balance");
 
         if (keccak256(bytes(protocol)) == keccak256(bytes("aave"))) {
             supplyLiquidityOnAave(token, amount);
@@ -168,28 +144,18 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
      * @param token The token to withdraw.
      * @param amount The amount of token to withdraw.
      */
-    function withdrawLentTokens(
-        string memory protocol,
-        address token,
-        uint256 amount
-    )
+    function withdrawLentTokens(string memory protocol, address token, uint256 amount)
         external
         onlyAgent
         validLendingProtocol(protocol)
         returns (uint256 amountWithdrawn)
     {
         if (keccak256(bytes(protocol)) == keccak256(bytes("aave"))) {
-            require(
-                tokenAddressToStruct[token].investedInAave >= amount,
-                "Insufficient invested amount"
-            );
+            require(tokenAddressToStruct[token].investedInAave >= amount, "Insufficient invested amount");
             amountWithdrawn = withdrawLiquidityFromAave(token, amount);
             tokenAddressToStruct[token].investedInAave -= amount;
         } else if (keccak256(bytes(protocol)) == keccak256(bytes("compound"))) {
-            require(
-                tokenAddressToStruct[token].investedInCompound >= amount,
-                "Insufficient invested amount"
-            );
+            require(tokenAddressToStruct[token].investedInCompound >= amount, "Insufficient invested amount");
             amountWithdrawn = withdrawLiquidityFromCompound(token, amount);
             tokenAddressToStruct[token].investedInCompound -= amount;
         }
@@ -219,30 +185,14 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
         int24 tickLower,
         int24 tickUpper
     ) external onlyAgent validLPProtocol(protocol) {
-        require(
-            tokenAddressToStruct[token0].balance >= amount0,
-            "Insufficient balance token0"
-        );
-        require(
-            tokenAddressToStruct[token1].balance >= amount1,
-            "Insufficient balance token1"
-        );
+        require(tokenAddressToStruct[token0].balance >= amount0, "Insufficient balance token0");
+        require(tokenAddressToStruct[token1].balance >= amount1, "Insufficient balance token1");
 
         if (keccak256(bytes(protocol)) == keccak256(bytes("uniswap"))) {
-            supplyLiquidityOnUniswap(
-                token0,
-                token1,
-                amount0,
-                amount1,
-                fee,
-                tickLower,
-                tickUpper
-            );
+            supplyLiquidityOnUniswap(token0, token1, amount0, amount1, fee, tickLower, tickUpper);
             tokenAddressToStruct[token0].investedInUniswap += amount0;
             tokenAddressToStruct[token1].investedInUniswap += amount1;
-        } else if (
-            keccak256(bytes(protocol)) == keccak256(bytes("aerodrome"))
-        ) {
+        } else if (keccak256(bytes(protocol)) == keccak256(bytes("aerodrome"))) {
             revert AerodromeNotImplemented();
         }
 
@@ -257,12 +207,11 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
      * @param token1 The second token to remove liquidity from.
      * @param liquidityAmount The amount of liquidity to remove.
      */
-    function removeLiquidity(
-        string memory protocol,
-        address token0,
-        address token1,
-        uint256 liquidityAmount
-    ) external onlyAgent validLPProtocol(protocol) {
+    function removeLiquidity(string memory protocol, address token0, address token1, uint256 liquidityAmount)
+        external
+        onlyAgent
+        validLPProtocol(protocol)
+    {
         if (keccak256(bytes(protocol)) == keccak256(bytes("uniswap"))) {
             withdrawLiquidityFromUniswap(
                 token0,
@@ -271,9 +220,7 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
                 /// @param fee default fee
                 uint128(liquidityAmount)
             );
-        } else if (
-            keccak256(bytes(protocol)) == keccak256(bytes("aerodrome"))
-        ) {
+        } else if (keccak256(bytes(protocol)) == keccak256(bytes("aerodrome"))) {
             revert AerodromeNotImplemented();
         }
     }
@@ -285,16 +232,12 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
      * @param _amountIn The amount of tokenIn to swap.
      * @param _fee The fee to swap on.
      */
-    function swapOnUniswap(
-        address _tokenIn,
-        address _tokenOut,
-        uint256 _amountIn,
-        uint24 _fee
-    ) external onlyAgent returns (uint256 amountOut) {
-        require(
-            tokenAddressToStruct[_tokenIn].balance >= _amountIn,
-            "Insufficient balance"
-        );
+    function swapOnUniswap(address _tokenIn, address _tokenOut, uint256 _amountIn, uint24 _fee)
+        external
+        onlyAgent
+        returns (uint256 amountOut)
+    {
+        require(tokenAddressToStruct[_tokenIn].balance >= _amountIn, "Insufficient balance");
         amountOut = swapOnUniswap(_tokenIn, _tokenOut, _amountIn, 1, _fee);
         tokenAddressToStruct[_tokenIn].balance -= _amountIn;
         tokenAddressToStruct[_tokenOut].balance += amountOut;
@@ -307,16 +250,11 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
      * @param _fee The fee to do arbitrage on.
      * @param _amount The amount to do arbitrage on.
      */
-    function doArbitrage(
-        address[] memory _routerPath,
-        address[] memory _tokenPath,
-        uint24 _fee,
-        uint256 _amount
-    ) external onlyAgent {
-        require(
-            tokenAddressToStruct[_tokenPath[0]].balance >= _amount,
-            "Insufficient balance"
-        );
+    function doArbitrage(address[] memory _routerPath, address[] memory _tokenPath, uint24 _fee, uint256 _amount)
+        external
+        onlyAgent
+    {
+        require(tokenAddressToStruct[_tokenPath[0]].balance >= _amount, "Insufficient balance");
         ArbitrageWithoutFlashLoan(_routerPath, _tokenPath, _fee, _amount);
     }
 
@@ -325,9 +263,7 @@ contract Vault is Ownable, LiquidityManager, ArbitrageContract {
      * @param _token Token address to get the balance of.
      * @return balance Balance of the user for the token.
      */
-    function getUserStruct(
-        address _token
-    ) external view returns (UserBalance memory) {
+    function getUserStruct(address _token) external view returns (UserBalance memory) {
         return tokenAddressToStruct[_token];
     }
 }
