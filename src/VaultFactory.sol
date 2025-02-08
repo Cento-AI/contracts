@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.22;
+
 import "./Vault.sol";
 import "../script/HelperConfig.s.sol";
 
 contract VaultFactory is HelperConfig {
     mapping(address => address) public ownerToVaultAddress;
+
     event VaultCreated(address indexed owner, address indexed vault);
+
     HelperConfig.NetworkConfig public activeNetworkConfig;
 
     constructor() {

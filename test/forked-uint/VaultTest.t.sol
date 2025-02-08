@@ -29,7 +29,7 @@ contract VaultTest is Test {
 
     function testCreateVault() public {
         vm.startPrank(user);
-        address _vault = vaultFactory.createVault();
+        address _vault = vaultFactory.createVault(user);
         Vault vault = Vault(_vault);
         assertEq(vault.owner(), user);
         vm.stopPrank();
@@ -37,25 +37,20 @@ contract VaultTest is Test {
 
     function testDepositERC20() public {
         vm.startPrank(user);
-        address _vault = vaultFactory.createVault();
+        address _vault = vaultFactory.createVault(user);
         Vault vault = Vault(_vault);
         IERC20(networkConfig.usdc).approve(address(vault), 100 * 1e6);
         vault.depositERC20(networkConfig.usdc, 100 * 1e6);
         assertEq(IERC20(networkConfig.usdc).balanceOf(user), 0);
-        assertEq(
-            IERC20(networkConfig.usdc).balanceOf(address(vault)),
-            100 * 1e6
-        );
-        Vault.UserBalance memory userBalance = vault.getStruct(
-            networkConfig.usdc
-        );
+        assertEq(IERC20(networkConfig.usdc).balanceOf(address(vault)), 100 * 1e6);
+        Vault.UserBalance memory userBalance = vault.getUserStruct(networkConfig.usdc);
         assertEq(userBalance.balance, 100 * 1e6);
         vm.stopPrank();
     }
 
     function testWithdrawERC20() public {
         vm.startPrank(user);
-        address _vault = vaultFactory.createVault();
+        address _vault = vaultFactory.createVault(user);
         Vault vault = Vault(_vault);
         IERC20(networkConfig.usdc).approve(address(vault), 100 * 1e6);
         vault.depositERC20(networkConfig.usdc, 100 * 1e6);
