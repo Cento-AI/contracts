@@ -37,7 +37,7 @@ contract LiquidityManagerTest is Test {
         fork = vm.createSelectFork(BASE_SEPOLIA_RPC_URL_2);
         vm.startPrank(owner);
         vaultFactory = new VaultFactory();
-        address _vault = vaultFactory.createVault();
+        address _vault = vaultFactory.createVault(owner);
         vault = Vault(_vault);
         deal(networkConfig.usdc, owner, 100 * 1e6);
         IERC20(networkConfig.usdc).approve(address(vault), 100 * 1e6);
@@ -197,41 +197,25 @@ contract LiquidityManagerTest is Test {
     function testSupplyUSDCOnAave() public {
         vm.startPrank(networkConfig.agent);
         vault.lendTokens("aave", networkConfig.usdc, 10 * 1e6);
-        (uint256 totalCollateralBase, , , , , ) = vault
-            .getAaveLiquidityStatus();
-        Vault.UserBalance memory userBalance = vault.getStruct(
-            networkConfig.usdc
-        );
+        (uint256 totalCollateralBase,,,,,) = vault.getAaveLiquidityStatus();
+        Vault.UserBalance memory userBalance = vault.getUserStruct(networkConfig.usdc);
         assertEq(userBalance.investedInAave, 10 * 1e6);
         assertEq(userBalance.balance, 90 * 1e6);
         assertGt(totalCollateralBase, 0);
-        assertEq(
-            IERC20(networkConfig.aaveUsdc).balanceOf(address(vault)),
-            10 * 1e6
-        );
+        assertEq(IERC20(networkConfig.aaveUsdc).balanceOf(address(vault)), 10 * 1e6);
         vm.stopPrank();
     }
 
     function testWithdrawUSDCFromAave() public {
         vm.startPrank(networkConfig.agent);
         vault.lendTokens("aave", networkConfig.usdc, 10 * 1e6);
-        uint256 amountWithdrawn = vault.withdrawLentTokens(
-            "aave",
-            networkConfig.usdc,
-            5 * 1e6
-        );
+        uint256 amountWithdrawn = vault.withdrawLentTokens("aave", networkConfig.usdc, 5 * 1e6);
         assertEq(amountWithdrawn, 5 * 1e6);
-        (uint256 totalCollateralBase, , , , , ) = vault
-            .getAaveLiquidityStatus();
+        (uint256 totalCollateralBase,,,,,) = vault.getAaveLiquidityStatus();
         assertGt(totalCollateralBase, 0);
-        Vault.UserBalance memory userBalance = vault.getStruct(
-            networkConfig.usdc
-        );
+        Vault.UserBalance memory userBalance = vault.getUserStruct(networkConfig.usdc);
         assertEq(userBalance.balance, 95 * 1e6);
-        assertEq(
-            IERC20(networkConfig.usdc).balanceOf(address(vault)),
-            95 * 1e6
-        );
+        assertEq(IERC20(networkConfig.usdc).balanceOf(address(vault)), 95 * 1e6);
         vm.stopPrank();
     }
 
@@ -239,9 +223,7 @@ contract LiquidityManagerTest is Test {
         vm.startPrank(networkConfig.agent);
         vault.lendTokens("compound", networkConfig.usdc, 10 * 1e6);
         assertGt(vault.getCompoundLiquidityStatus(), 0);
-        Vault.UserBalance memory userBalance = vault.getStruct(
-            networkConfig.usdc
-        );
+        Vault.UserBalance memory userBalance = vault.getUserStruct(networkConfig.usdc);
         assertEq(userBalance.investedInCompound, 10 * 1e6);
         assertEq(userBalance.balance, 90 * 1e6);
         vm.stopPrank();
@@ -250,15 +232,9 @@ contract LiquidityManagerTest is Test {
     function testWithdrawUSDCFromCompound() public {
         vm.startPrank(networkConfig.agent);
         vault.lendTokens("compound", networkConfig.usdc, 10 * 1e6);
-        uint256 amountWithdrawn = vault.withdrawLentTokens(
-            "compound",
-            networkConfig.usdc,
-            5 * 1e6
-        );
+        uint256 amountWithdrawn = vault.withdrawLentTokens("compound", networkConfig.usdc, 5 * 1e6);
         assertEq(amountWithdrawn, 5 * 1e6);
-        Vault.UserBalance memory userBalance = vault.getStruct(
-            networkConfig.usdc
-        );
+        Vault.UserBalance memory userBalance = vault.getUserStruct(networkConfig.usdc);
         assertEq(userBalance.balance, 95 * 1e6);
         assertEq(userBalance.investedInCompound, 5 * 1e6);
         vm.stopPrank();
