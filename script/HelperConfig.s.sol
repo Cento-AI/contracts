@@ -38,7 +38,7 @@ contract HelperConfig is Script {
             uniswapRouter: 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4,
             uniswapQouter: 0xC5290058841028F1614F3A6F0F5816cAd0df5E27,
             aavePool: 0xbE781D7Bdf469f3d94a62Cdcc407aCe106AEcA74,
-            agent: address(77)
+            agent: 0x7e393441Edc1Bb1621318E000cDfC74947f23b26
         });
         return BaseSepoliaConfig;
     }
@@ -57,7 +57,7 @@ contract HelperConfig is Script {
             uniswapRouter: 0x101F443B4d1b059569D643917553c771E1b9663E,
             uniswapQouter: 0x2779a0CC1c3e0E44D2542EC3e79e3864Ae93Ef0B,
             aavePool: 0xBfC91D59fdAA134A4ED45f7B584cAf96D7792Eff,
-            agent: address(77)
+            agent: 0x7e393441Edc1Bb1621318E000cDfC74947f23b26
         });
         return ArbitrumSepoliaConfig;
     }
