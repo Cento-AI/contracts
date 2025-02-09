@@ -30,97 +30,119 @@
 
 ---
 
+## 📦 Deployments
+
+### Base Sepolia : [VaultFactory](https://base-sepolia.blockscout.com/address/0x99A3E04423dec42407dFed6A3d984d9A6200511d?tab=contract)
+
+### Arbitrum Sepolia : [VaultFactory](https://arbitrum-sepolia.blockscout.com/address/0x1C4cCc2c917EDF45aD1C3C9675cF130b47Db8c11?tab=contract)
+
+---
+
 ## 🏗️ Architecture Overview
 
 CentoAI is built on a modular architecture, with the following key components:
 
 ### 1. **Smart Contracts**
-   - **LiquidityManager.sol**: Manages liquidity across **Aave**, **Compound**, and **Uniswap V3**.
-   - **Arbitrage.sol**: Executes flash loan arbitrage strategies using **Balancer V2**.
-   - **Vault.sol**: Manages user balances and strategy execution.
-   - **VaultFactory.sol**: Deploys personalized vaults for users.
+
+- **LiquidityManager.sol**: Manages liquidity across **Aave**, **Compound**, and **Uniswap V3**.
+- **Arbitrage.sol**: Executes flash loan arbitrage strategies using **Balancer V2**.
+- **Vault.sol**: Manages user balances and strategy execution.
+- **VaultFactory.sol**: Deploys personalized vaults for users.
 
 ### 2. **Frontend**
-   - Built with **Next.js** and **OnchainKit** for seamless wallet integration and portfolio visualization.
-   - Provides a user-friendly dashboard for monitoring portfolio performance and strategy execution.
-   - Integrates **Privy** for embedded wallets and social logins, enabling users to onboard with email or existing wallets.
+
+- Built with **Next.js** and **OnchainKit** for seamless wallet integration and portfolio visualization.
+- Provides a user-friendly dashboard for monitoring portfolio performance and strategy execution.
+- Integrates **Privy** for embedded wallets and social logins, enabling users to onboard with email or existing wallets.
 
 ### 3. **Backend**
-   - **Node.js** backend for handling off-chain computations and API integrations.
-   - Fetches real-time APY data from DeFi protocols and provides it to the AI agent.
+
+- **Node.js** backend for handling off-chain computations and API integrations.
+- Fetches real-time APY data from DeFi protocols and provides it to the AI agent.
 
 ### 4. **AI Agent**
-   - Analyzes yield opportunities and arbitrage strategies using machine learning models.
-   - Executes strategies securely using **Coinbase AgentKit**.
+
+- Analyzes yield opportunities and arbitrage strategies using machine learning models.
+- Executes strategies securely using **Coinbase AgentKit**.
 
 ---
 
 ## 🔧 Workflows
 
 ### 1. **User Onboarding**
-   - Users connect their wallets or sign in with email/social login using **Privy**.
-   - A personalized vault is deployed for the user using **VaultFactory.sol**.
-   - Users deposit ERC20 tokens (e.g., USDC, ETH) into their vault.
+
+- Users connect their wallets or sign in with email/social login using **Privy**.
+- A personalized vault is deployed for the user using **VaultFactory.sol**.
+- Users deposit ERC20 tokens (e.g., USDC, ETH) into their vault.
 
 ### 2. **AI-Driven Strategy Execution**
-   - The AI agent fetches real-time APY data from **Aave**, **Compound**, and **Uniswap V3**.
-   - It analyzes yield opportunities and identifies arbitrage opportunities using **Balancer V2** flash loans.
-   - The AI agent executes strategies such as:
-     - **Yield Farming**: Moves funds between protocols to maximize APY.
-     - **Flash Loan Arbitrage**: Executes risk-free arbitrage between DEXes.
+
+- The AI agent fetches real-time APY data from **Aave**, **Compound**, and **Uniswap V3**.
+- It analyzes yield opportunities and identifies arbitrage opportunities using **Balancer V2** flash loans.
+- The AI agent executes strategies such as:
+  - **Yield Farming**: Moves funds between protocols to maximize APY.
+  - **Flash Loan Arbitrage**: Executes risk-free arbitrage between DEXes.
 
 ### 3. **Portfolio Management**
-   - Users can monitor their portfolio performance, strategy execution, and transaction history through the dashboard.
-   - The dashboard provides insights into:
-     - Current APY across protocols.
-     - Profit/loss from arbitrage strategies.
-     - Historical performance of the portfolio.
+
+- Users can monitor their portfolio performance, strategy execution, and transaction history through the dashboard.
+- The dashboard provides insights into:
+  - Current APY across protocols.
+  - Profit/loss from arbitrage strategies.
+  - Historical performance of the portfolio.
 
 ---
 
 ## 🧩 Smart Contracts
 
 ### 1. **LiquidityManager.sol**
-   - Manages liquidity across **Aave**, **Compound**, and **Uniswap V3**.
-   - Key Functions:
-     - `supplyLiquidityOnAave`: Supplies liquidity to Aave.
-     - `withdrawLiquidityFromCompound`: Withdraws liquidity from Compound.
-     - `swapOnUniswap`: Executes token swaps on Uniswap V3.
+
+- Manages liquidity across **Aave**, **Compound**, and **Uniswap V3**.
+- Key Functions:
+  - `supplyLiquidityOnAave`: Supplies liquidity to Aave.
+  - `withdrawLiquidityFromCompound`: Withdraws liquidity from Compound.
+  - `swapOnUniswap`: Executes token swaps on Uniswap V3.
 
 ### 2. **Arbitrage.sol**
-   - Executes flash loan arbitrage strategies using **Balancer V2**.
-   - Key Functions:
-     - `executeTrade`: Initiates a flash loan and executes arbitrage.
-     - `receiveFlashLoan`: Callback function for flash loan execution.
+
+- Executes flash loan arbitrage strategies using **Balancer V2**.
+- Key Functions:
+  - `executeTrade`: Initiates a flash loan and executes arbitrage.
+  - `receiveFlashLoan`: Callback function for flash loan execution.
 
 ### 3. **Vault.sol**
-   - Manages user balances and strategy execution.
-   - Key Functions:
-     - `depositERC20`: Deposits ERC20 tokens into the vault.
-     - `withdrawERC20`: Withdraws ERC20 tokens from the vault.
-     - `lendTokens`: Lends tokens to **Aave** or **Compound**.
+
+- Manages user balances and strategy execution.
+- Key Functions:
+  - `depositERC20`: Deposits ERC20 tokens into the vault.
+  - `withdrawERC20`: Withdraws ERC20 tokens from the vault.
+  - `lendTokens`: Lends tokens to **Aave** or **Compound**.
 
 ### 4. **VaultFactory.sol**
-   - Deploys personalized vaults for users.
-   - Key Functions:
-     - `createVault`: Deploys a new vault for a user.
-     - `getVaultAddress`: Retrieves the vault address for a user.
+
+- Deploys personalized vaults for users.
+- Key Functions:
+  - `createVault`: Deploys a new vault for a user.
+  - `getVaultAddress`: Retrieves the vault address for a user.
 
 ---
 
 ## 🛠️ Integration Details
 
 ### 1. **Coinbase AgentKit**
-   - Used for secure, programmatic wallet interactions.
-   - Enables the AI agent to execute on-chain actions (e.g., deposits, withdrawals, swaps).
+
+- Used for secure, programmatic wallet interactions.
+- Enables the AI agent to execute on-chain actions (e.g., deposits, withdrawals, swaps).
 
 ### 2. **Privy**
-   - Provides embedded wallets and social logins, making it easy for users to onboard and interact with DeFi.
-   - Supports both web3-native users (with existing wallets) and newcomers (with email/social login).
+
+- Provides embedded wallets and social logins, making it easy for users to onboard and interact with DeFi.
+- Supports both web3-native users (with existing wallets) and newcomers (with email/social login).
 
 ### 3. **Base and Arbitrum**
-   - CentoAI is deployed on **Base** and **Arbitrum** for low-cost, high-speed transactions.
-   - Supports yield farming and arbitrage strategies on both networks.
+
+- CentoAI is deployed on **Base** and **Arbitrum** for low-cost, high-speed transactions.
+- Supports yield farming and arbitrage strategies on both networks.
 
 ---
 
@@ -129,23 +151,28 @@ CentoAI is built on a modular architecture, with the following key components:
 CentoAI is designed to compete in the following **ETHGlobal Agentic Ethereum** tracks:
 
 ### **Coinbase Developer Platform**
+
 - **Most Innovative Use of AgentKit**: CentoAI uses AgentKit to automate complex DeFi strategies, abstracting away the complexity for users.
 - **Best Combination of AgentKit + OnchainKit**: The frontend integrates **OnchainKit** for seamless wallet interactions and portfolio visualization.
 - **Viral Consumer App Award**: CentoAI’s user-friendly interface and AI-driven strategies make it accessible to both DeFi experts and beginners.
 - **AgentKit Pool Prize**: CentoAI is built with AgentKit in a meaningful way for users to interact with the DeFi ecosystem.
 
 ### **Base**
+
 - **Build an AI-Powered App on Base**: CentoAI is deployed on **Base**, leveraging its low-cost, high-speed infrastructure for seamless DeFi operations.
 
 ### **Privy**
+
 - **Best Consumer Experience Built with Server Wallets**: CentoAI uses **Privy** to provide a seamless onboarding experience, enabling users to sign in with email, social login, or existing wallets. This makes CentoAI accessible to all users, regardless of their web3 experience.
 
 ### **Arbitrum**
+
 - **Most Innovative AI Agent Applications**: CentoAI combines yield farming and flash loan arbitrage to push the boundaries of DeFi automation.
 
 ---
 
 ## 📂 Repository Structure
+
 ```
 contracts/
     ├── lib/ # Dependencies
@@ -170,41 +197,46 @@ contracts/
 ### Installation
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/Cento-AI/contracts
    cd cento-ai
    ```
 
 2. Install dependencies:
-    ```bash
-    forge install
-    ```
+
+   ```bash
+   forge install
+   ```
 
 3. Compile the smart contract:
-    ```bash
-    forge build
-    ```
+
+   ```bash
+   forge build
+   ```
 
 4. Deploy the contract to the Base Sepolia Testnet:
+
    ```bash
     forge script script/DeployVaultFactory.sol:DeployVaultFactory <BASE_SEPOLIA_RPC_URL> --private-key <PRIVATE_KEY> --broadcast --verify --verifier blockscout --verifier-url https://base-sepolia.blockscout.com/api/
-    ```
+   ```
 
    Deploy the contract to the Arbitrum Sepolia Testnet:
+
    ```bash
     forge script script/DeployVaultFactory.sol:DeployVaultFactory <ARBITRUM_SEPOLIA_RPC_URL> --private-key <PRIVATE_KEY> --broadcast --verify --verifier blockscout --verifier-url https://arbitrum-sepolia.blockscout.com/api/
-    ```
-
+   ```
 
 ## Testing
+
 Foundry is used for testing the Arbitrage contract. To run the tests:
 
 1. Write your tests in the test directory.
 
 2. Run the tests using:
-    ```bash
-    forge test
-    ```
+   ```bash
+   forge test
+   ```
 
 ---
 
