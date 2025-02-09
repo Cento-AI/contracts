@@ -1,8 +1,6 @@
 # CentoAI: AI-Powered DeFi Portfolio Manager
 
-![CentoAI Logo](https://via.placeholder.com/150) <!-- Replace with your logo -->
-
-**CentoAI** is an AI-powered DeFi portfolio manager that optimizes yield farming and flash loan arbitrage across top DeFi protocols like **Aave**, **Compound**, and **Uniswap V3**. Built using **Coinbase AgentKit**, **Warden Protocol**, and deployed on **Base**, CentoAI automates fund management and strategy execution to maximize user returns.
+**CentoAI** is an AI-powered DeFi portfolio manager that optimizes yield farming and flash loan arbitrage across top DeFi protocols like **Aave**, **Compound**, and **Uniswap V3**. Built using **Coinbase AgentKit**, **Privy**, and deployed on **Base** and **Arbitrum**, CentoAI automates fund management and strategy execution to maximize user returns.
 
 ---
 
@@ -13,14 +11,16 @@
 - **Multi-Protocol Integration**: Supports **Aave**, **Compound**, **Uniswap V3**, and **Balancer V2**.
 - **On-Chain Automation**: Uses **Coinbase AgentKit** to automate fund movements and strategy execution.
 - **User-Friendly Vaults**: Each user gets a personalized vault to deposit funds and set strategies.
+- **Seamless Onboarding**: Leverages **Privy** for embedded wallets and social logins, making it easy for users to onboard and interact with DeFi.
 - **Base Deployment**: Deployed on **Base** for low-cost, high-speed transactions.
+- **Arbitrum Deployment**: Deployed on **Arbitrum** for low-cost, high-speed transactions.
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Core Framework**: [Coinbase AgentKit](https://developer.coinbase.com/agentkit)
-- **Automation**: [Warden Protocol](https://wardenprotocol.org)
+- **Onboarding**: [Privy](https://privy.io)
 - **Blockchain**: [Base](https://base.org), [Arbitrum](https://arbitrum.io)
 - **Frontend**: Next.js + OnchainKit
 - **Backend**: Node.js
@@ -41,6 +41,7 @@ CentoAI is built on a modular architecture, with the following key components:
 ### 2. **Frontend**
    - Built with **Next.js** and **OnchainKit** for seamless wallet integration and portfolio visualization.
    - Provides a user-friendly dashboard for monitoring portfolio performance and strategy execution.
+   - Integrates **Privy** for embedded wallets and social logins, enabling users to onboard with email or existing wallets.
 
 ### 3. **Backend**
    - **Node.js** backend for handling off-chain computations and API integrations.
@@ -48,14 +49,16 @@ CentoAI is built on a modular architecture, with the following key components:
 
 ### 4. **AI Agent**
    - Analyzes yield opportunities and arbitrage strategies using machine learning models.
-   - Executes strategies securely using **Coinbase AgentKit** and **Warden Protocol**.
+   - Executes strategies securely using **Coinbase AgentKit**.
 
 ---
 
 ## 🔧 Workflows
 
+## 🔧 Workflows
+
 ### 1. **User Onboarding**
-   - Users connect their wallets to the CentoAI platform.
+   - Users connect their wallets or sign in with email/social login using **Privy**.
    - A personalized vault is deployed for the user using **VaultFactory.sol**.
    - Users deposit ERC20 tokens (e.g., USDC, ETH) into their vault.
 
@@ -111,9 +114,9 @@ CentoAI is built on a modular architecture, with the following key components:
    - Used for secure, programmatic wallet interactions.
    - Enables the AI agent to execute on-chain actions (e.g., deposits, withdrawals, swaps).
 
-### 2. **Warden Protocol**
-   - Used for automating on-chain actions and enforcing strategy rules.
-   - Ensures that strategies are executed only when predefined conditions are met.
+### 2. **Privy**
+   - Provides embedded wallets and social logins, making it easy for users to onboard and interact with DeFi.
+   - Supports both web3-native users (with existing wallets) and newcomers (with email/social login).
 
 ### 3. **Base and Arbitrum**
    - CentoAI is deployed on **Base** and **Arbitrum** for low-cost, high-speed transactions.
@@ -129,14 +132,13 @@ CentoAI is designed to compete in the following **ETHGlobal Agentic Ethereum** t
 - **Most Innovative Use of AgentKit**: CentoAI uses AgentKit to automate complex DeFi strategies, abstracting away the complexity for users.
 - **Best Combination of AgentKit + OnchainKit**: The frontend integrates **OnchainKit** for seamless wallet interactions and portfolio visualization.
 - **Viral Consumer App Award**: CentoAI’s user-friendly interface and AI-driven strategies make it accessible to both DeFi experts and beginners.
-- **AgentKit Pool Prize**: CentoAI is build with AgentKit in a meaningful way for users to interact with the DeFi ecosystem.
+- **AgentKit Pool Prize**: CentoAI is built with AgentKit in a meaningful way for users to interact with the DeFi ecosystem.
 
 ### **Base**
 - **Build an AI-Powered App on Base**: CentoAI is deployed on **Base**, leveraging its low-cost, high-speed infrastructure for seamless DeFi operations.
 
-### **Warden Protocol**
-- **Agents with Best DeFi Skills**: CentoAI uses **Warden Protocol** to automate on-chain actions and enforce strategy rules (e.g., "only execute if APY > X%").
-- **Intelligent Integrations**: CentoAI integrates **Warden Protocol** with an AI-driven decision engine to create a unique toolkit for DeFi portfolio management. The AI agent uses **Warden Protocol** to deploy smart contracts, exposing strategy execution functions (e.g., `executeYieldFarming`, `executeArbitrage`) as callable tools.
+### **Privy**
+- **Best Consumer Experience Built with Server Wallets**: CentoAI uses **Privy** to provide a seamless onboarding experience, enabling users to sign in with email, social login, or existing wallets. This makes CentoAI accessible to all users, regardless of their web3 experience.
 
 ### **Arbitrum**
 - **Most Innovative AI Agent Applications**: CentoAI combines yield farming and flash loan arbitrage to push the boundaries of DeFi automation.
@@ -227,17 +229,4 @@ This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for d
 ## 🙏 Acknowledgments
 
 - **ETHGlobal** for hosting the **Agentic Ethereum** hackathon.
-- **Coinbase**, **Base**, **Warden Protocol**, and **Arbitrum** for their support and tooling.
-
----
-
-## 📸 Visuals (Placeholder)
-
-### **Dashboard Overview**
-![Dashboard](https://via.placeholder.com/800x400) <!-- Replace with actual dashboard screenshot -->
-
-### **Vault Management**
-![Vault](https://via.placeholder.com/800x400) <!-- Replace with actual vault screenshot -->
-
-### **Strategy Execution**
-![Strategy](https://via.placeholder.com/800x400) <!-- Replace with actual strategy execution screenshot -->
+- **Coinbase**, **Base**, **Privy**, and **Arbitrum** for their support and tooling.
