@@ -1,5 +1,7 @@
 # CentoAI: AI-Powered DeFi Portfolio Manager
 
+![CentoAI Logo](/CentoAI.png)
+
 **CentoAI** is an AI-powered DeFi portfolio manager that optimizes yield farming and flash loan arbitrage across top DeFi protocols like **Aave**, **Compound**, and **Uniswap V3**. Built using **Coinbase AgentKit**, **Privy**, and deployed on **Base** and **Arbitrum**, CentoAI automates fund management and strategy execution to maximize user returns.
 
 ---
@@ -52,8 +54,6 @@ CentoAI is built on a modular architecture, with the following key components:
    - Executes strategies securely using **Coinbase AgentKit**.
 
 ---
-
-## 🔧 Workflows
 
 ## 🔧 Workflows
 
