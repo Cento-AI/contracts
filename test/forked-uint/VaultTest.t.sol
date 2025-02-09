@@ -16,11 +16,12 @@ contract VaultTest is Test {
     VaultFactory public vaultFactory;
     uint256 fork;
     string BASE_SEPOLIA_RPC_URL_2 = vm.envString("BASE_SEPOLIA_RPC_URL_2");
+    string ARBITRUM_SEPOLIA_RPC_URL = vm.envString("ARBITRUM_SEPOLIA_RPC_URL");
 
     function setUp() public {
         helperConfig = new HelperConfig();
-        networkConfig = helperConfig.getBaseSepoliaConfig();
-        fork = vm.createSelectFork(BASE_SEPOLIA_RPC_URL_2);
+        networkConfig = helperConfig.getArbitrumSepoliaConfig();
+        fork = vm.createSelectFork(ARBITRUM_SEPOLIA_RPC_URL);
         vm.startPrank(owner);
         vaultFactory = new VaultFactory();
         vm.stopPrank();
@@ -42,8 +43,13 @@ contract VaultTest is Test {
         IERC20(networkConfig.usdc).approve(address(vault), 100 * 1e6);
         vault.depositERC20(networkConfig.usdc, 100 * 1e6);
         assertEq(IERC20(networkConfig.usdc).balanceOf(user), 0);
-        assertEq(IERC20(networkConfig.usdc).balanceOf(address(vault)), 100 * 1e6);
-        Vault.UserBalance memory userBalance = vault.getUserStruct(networkConfig.usdc);
+        assertEq(
+            IERC20(networkConfig.usdc).balanceOf(address(vault)),
+            100 * 1e6
+        );
+        Vault.UserBalance memory userBalance = vault.getUserStruct(
+            networkConfig.usdc
+        );
         assertEq(userBalance.balance, 100 * 1e6);
         vm.stopPrank();
     }

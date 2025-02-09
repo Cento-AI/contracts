@@ -34,7 +34,7 @@ contract VaultFactory is HelperConfig {
      *      Currently hardcoded to Base Sepolia, could be made more flexible in future versions
      */
     constructor() {
-        activeNetworkConfig = getBaseSepoliaConfig();
+        activeNetworkConfig = getArbitrumSepoliaConfig();
     }
 
     /**

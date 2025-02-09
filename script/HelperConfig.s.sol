@@ -43,6 +43,25 @@ contract HelperConfig is Script {
         return BaseSepoliaConfig;
     }
 
+    function getArbitrumSepoliaConfig()
+        public
+        pure
+        returns (NetworkConfig memory)
+    {
+        NetworkConfig memory ArbitrumSepoliaConfig = NetworkConfig({
+            weth: 0x1dF462e2712496373A347f8ad10802a5E95f053D,
+            usdc: 0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d,
+            aaveUsdc: 0x460b97BD498E1157530AEb3086301d5225b91216,
+            compoundUsdc: 0xfb4561C6AFF45c00EE0D2eF33D058E2F96959f0F, // Mock compound usdc
+            uniswapFactory: 0x248AB79Bbb9bC29bB72f7Cd42F17e054Fc40188e,
+            uniswapRouter: 0x101F443B4d1b059569D643917553c771E1b9663E,
+            uniswapQouter: 0x2779a0CC1c3e0E44D2542EC3e79e3864Ae93Ef0B,
+            aavePool: 0xBfC91D59fdAA134A4ED45f7B584cAf96D7792Eff,
+            agent: address(77)
+        });
+        return ArbitrumSepoliaConfig;
+    }
+
     function getAvaxFujiConfig() public pure returns (NetworkConfig memory) {
         NetworkConfig memory AvaxFujiConfig = NetworkConfig({
             weth: address(0),
